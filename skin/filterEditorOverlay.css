@@ -1,0 +1,7 @@
+.ruleactiontarget[type="tonequilla@mesquilla.com#playSound"] {
+  -moz-binding: url("chrome://tonequilla/content/bindings.xml#soundPicker");
+}
+
+toolbarbutton.focusbutton {
+  -moz-user-focus: normal;
+}

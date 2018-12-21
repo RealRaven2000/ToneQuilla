@@ -1,0 +1,6 @@
+content  tonequilla   content/
+locale   tonequilla   en-US         locale/en-US/
+skin     tonequilla   classic/1.0   skin/
+resource tonequilla   content/
+overlay  chrome://messenger/content/messenger.xul chrome://tonequilla/content/messengerOverlay.xul
+overlay  chrome://messenger/content/FilterEditor.xul chrome://tonequilla/content/filterEditorOverlay.xul
