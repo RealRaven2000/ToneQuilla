@@ -64,42 +64,53 @@
       <method name="getURL">
         <body>
           <![CDATA[
-            const nsIFilePicker = Components.interfaces.nsIFilePicker;
-            var fp = Components.classes["@mozilla.org/filepicker;1"]
-                               .createInstance(nsIFilePicker);
+            const Ci = Components.interfaces,
+                  Cc = Components.classes,
+                  nsIFilePicker = Ci.nsIFilePicker,
+                  wildmat = "*.wav; *.ogg; *.mp3; *.aiff",
+                  label = ".wav, .ogg, .mp3; .aiff";
+            let fp = Cc["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker),
+                thisHbox = this.hbox,
+                thisTextbox = this.textbox;
 
-            var wildmat = "*.wav; *.ogg; *.mp3; *.aiff";
-            var label = ".wav, .ogg, .mp3; .aiff";
 
             fp.init(window, "", nsIFilePicker.modeOpen);
             fp.appendFilter(label, wildmat);
             fp.appendFilters(nsIFilePicker.filterAll);
-            if (this.hbox.value && this.hbox.value.length)
+            if (thisHbox.value && thisHbox.value.length)
             {
-              let nsIURL = Components.classes["@mozilla.org/network/io-service;1"]
-                                      .getService(Components.interfaces.nsIIOService)
-                                      .newURI(this.hbox.value, null, null)
-                                      .QueryInterface(Components.interfaces.nsIURL);
+              let nsIURL = Cc["@mozilla.org/network/io-service;1"]
+                            .getService(Ci.nsIIOService)
+                            .newURI(thisHbox.value, null, null)
+                            .QueryInterface(Ci.nsIURL);
               fp.defaultString = nsIURL.fileName;
-              fp.displayDirectory = nsIURL.QueryInterface(Components.interfaces.nsIFileURL)
+              fp.displayDirectory = nsIURL.QueryInterface(Ci.nsIFileURL)
                                           .file
                                           .parent;
             }
             else
-            {
+            {            
               Components.utils.import("resource://tonequilla/ToneQuillaPlay.jsm");
-              fp.displayDirectory =
-                ToneQuillaPlay.soundsDirectory
-                              .QueryInterface(Components.interfaces.nsILocalFile);
+              if (!ToneQuillaPlay.window || !ToneQuillaPlay.soundsDirectory) {
+                debugger;
+                ToneQuillaPlay.init();
+              }
+              if (ToneQuillaPlay.soundsDirectory)
+                fp.displayDirectory =
+                  ToneQuillaPlay.soundsDirectory.QueryInterface(Ci.nsIFile);
+            }
+            
+            let fpCallback = function fpCallback_FilePicker(aResult) {
+              if (aResult == Ci.nsIFilePicker.returnOK) {
+                if (fp.file) {
+                  let url = fp.fileURL;
+                  thisHbox.value = url.spec;
+                  thisTextbox.value = fp.file.leafName;
+                }
+              }
             }
 
-            var ret = fp.show();
-
-            if (ret == nsIFilePicker.returnOK) {
-              let url = fp.fileURL;
-              this.hbox.value = url.spec;
-              this.textbox.value = fp.file.leafName;
-            }
+            fp.open(fpCallback);		    
           ]]>
         </body>
       </method>
