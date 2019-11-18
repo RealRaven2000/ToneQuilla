@@ -264,9 +264,10 @@ var ToneQuillaPlay = {
     {
       case "video/ogg":
       case "audio/ogg":
+      case "audio/mpeg":
         that._audioElement = new that.window.Audio(playSpec);
         that._audioElement.autoplay = true;
-        that._audioElement.load();
+        that._audioElement.load(); // plays twice!
         break;
       case "audio/wav":
       case "audio/x-wav":

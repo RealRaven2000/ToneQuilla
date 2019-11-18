@@ -6,4 +6,4 @@ pwsh -Command "(gc -en UTF8NoBOM manifest.json) -replace 'pre%oldRev%', 'pre%ton
 "C:\Program Files\7-Zip\7z" a -xr!.svn toneQuilla.zip install.rdf chrome.manifest credits.html content defaults locale skin license.txt
 echo %toneQuillaRev% > revision.txt
 move toneQuilla-*.xpi "..\..\Test Builds\1.2\"
-rename toneQuilla.zip ToneQuilla-1.2pre%toneQuillaRev%.xpi
+rename toneQuilla.zip ToneQuilla-1.2.1pre%toneQuillaRev%.xpi
