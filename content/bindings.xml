@@ -92,7 +92,6 @@
             {            
               Components.utils.import("resource://tonequilla/ToneQuillaPlay.jsm");
               if (!ToneQuillaPlay.window || !ToneQuillaPlay.soundsDirectory) {
-                debugger;
                 ToneQuillaPlay.init();
               }
               if (ToneQuillaPlay.soundsDirectory)
@@ -118,6 +117,7 @@
         <body>
           <![CDATA[
           Components.utils.import("resource://tonequilla/ToneQuillaPlay.jsm");
+          ToneQuillaPlay.logDebug("Calling play() method from binding 'soundPicker'.");
           ToneQuillaPlay.play(this.hbox.value);
           ]]>
         </body>

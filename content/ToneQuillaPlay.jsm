@@ -34,9 +34,9 @@ const Cc = Components.classes,
       Cu = Components.utils;
 
 // support variables for playing sound
-const kDelayToNext = 5000,
-      kDelayToClear = 15000,
-      kStatusIdle = 0, // not playing anything
+const kDelayToNext = 1200,   // was 5000
+      kDelayToClear = 3000,  // was 15000
+      kStatusIdle = 0,       // not playing anything
       kStatusStart = 1;
 
 function re(e) {
@@ -45,16 +45,17 @@ function re(e) {
   throw e;
 }
 
-function logDebug(txt){
-  const Prefix = "extensions.tonequilla.",
-        service = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch),  
-        consoleService = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
-  let isDebug = service.getBoolPref(Prefix + 'debug');
-  if (isDebug)
-    consoleService.logStringMessage("ToneQuilla\n" + txt);
-}
 
 var ToneQuillaPlay = {
+  
+  logDebug: function logDebug(txt) {
+    const Prefix = "extensions.tonequilla.",
+          service = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch),  
+          consoleService = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
+    let isDebug = service.getBoolPref(Prefix + 'debug');
+    if (isDebug)
+      consoleService.logStringMessage("ToneQuilla\n" + txt);
+  },
 
   // nsISound instance to play .wav files
   _nsISound: null,
@@ -96,7 +97,10 @@ var ToneQuillaPlay = {
     // new utility function to unpack a file from the xpi
     function copyDataURLToFile(aURL, file, callback) {
       let uri = Services.io.newURI(aURL),
-          channel = Services.io.newChannelFromURI2(uri,
+          newChannelFun = Services.io.newChannelFromURI ? 
+                          Services.io.newChannelFromURI.bind(Services.io) : 
+                          Services.io.newChannelFromURI2.bind(Services.io),
+          channel = newChannelFun(uri,
                     null,
                     Services.scriptSecurityManager.getSystemPrincipal(),
                     null,
@@ -151,11 +155,11 @@ var ToneQuillaPlay = {
           // file.append("applause.wav");
           try {
             if (file && !file.exists()) {
-              logDebug("Try to copy " + name + " to " + file.path + "...");
+              ToneQuillaPlay.logDebug("Try to copy " + name + " to " + file.path + "...");
               copyDataURLToFile("chrome://tonequilla/content/sounds/" + name, file);
             }
             else
-              logDebug("File exists: " + file.path);
+              ToneQuillaPlay.logDebug("File exists: " + file.path);
           }
           catch(ex) {
             re(ex);
@@ -164,6 +168,7 @@ var ToneQuillaPlay = {
       }
       else {                                  // old init code.
         // pre-Moz2
+        that.logDebug("going through AddonManager ... (outdated code)");
         Cu.import("resource://gre/modules/AddonManager.jsm");
 
         AddonManager.getAddonByID(that.MY_ID,
@@ -193,6 +198,7 @@ var ToneQuillaPlay = {
 
   // function to play the next queued sound
   _nextSound: function ToneQuillaPlay_nextSound() {
+    that.logDebug("nextSound()");
     let soundSpec = that._playQueue.shift();
     if (soundSpec)
     {
@@ -211,15 +217,15 @@ var ToneQuillaPlay = {
     }
   },
 
-  play: function ToneQuillaPlay_play(aSpec)
-  {
+  play: function ToneQuillaPlay_play(aSpec) {
+    that.logDebug("play() ...");
     let playSpec = aSpec;
     // initialize module if needed
     if (!that._playTimer)
       that.init();
 
-    let dotIndex = aSpec.lastIndexOf(".");
-    let extension = "";
+    let dotIndex = aSpec.lastIndexOf("."),
+        extension = "";
     if (dotIndex >= 0)
       extension = aSpec.substr(dotIndex + 1).toLowerCase();
     let mimeType = "";
@@ -242,8 +248,8 @@ var ToneQuillaPlay = {
     //  also checking the default location.
     if (!nsIFileURL.file.exists())
     {
-      let directory = that.soundsDirectory;
-      let newURL = that._nsIIOService.newFileURI(directory)
+      let directory = that.soundsDirectory,
+          newURL = that._nsIIOService.newFileURI(directory)
                        .QueryInterface(Ci.nsIURL);
       newURL.fileName = nsIFileURL.QueryInterface(Ci.nsIURL).fileName;
       playSpec = newURL.QueryInterface(Ci.nsIURI).spec;
@@ -259,6 +265,8 @@ var ToneQuillaPlay = {
     // Macs can use nsISound to play aiff files
     if (that.window.navigator.platform.indexOf("Mac") >= 0 && mimeType == "audio/aiff")
       mimeType = "audio/wav";
+    
+    that.logDebug("determined mimeType = " + mimeType);
 
     switch (mimeType)
     {
@@ -287,13 +295,14 @@ var ToneQuillaPlay = {
   // clear all file references from the ignore queue
   _clearIgnore: function ToneQuillaPlay_clearIgnore()
   {
+    that.logDebug("_clearIgnore()");
     while (that._ignoreQueue.pop())
       ;
   },
 
   // add a file URL spec to the play queue, unless already queued or ignored
-  queueToPlay: function ToneQuillaPlay_queueToPlay(aSpec)
-  {
+  queueToPlay: function ToneQuillaPlay_queueToPlay(aSpec)  {
+    that.logDebug("_queueToPlay(" + aSpec + ")");
     // This function is designed to allow multiple emails to request playing
     // a sound, without getting the same sound multiple times, nor overlapping.
     // Multiple sounds are delayed to allow each to be heard. Any sounds
@@ -306,18 +315,21 @@ var ToneQuillaPlay = {
     // ignore recently queued sounds
     if (that._ignoreQueue.indexOf(aSpec) >= 0)
     {
+      that.logDebug("ignoring this sound, it was already played recently.");
       return;
     }
 
     let urlIndex = that._playQueue.indexOf(aSpec);
     if (urlIndex < 0)
     {
+      that.logDebug("queueing sound, status = " + that._status);
       that._playQueue.push(aSpec);
       that._ignoreQueue.push(aSpec);
     }
 
     if (that._status == kStatusIdle)
     {
+      that.logDebug("starting next sound...");
       that._status = kStatusStart;
       that._nextSound();
     }

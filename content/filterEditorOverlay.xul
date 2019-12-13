@@ -31,4 +31,7 @@
  -->
 <?xml-stylesheet href='chrome://tonequilla/skin/filterEditorOverlay.css' type='text/css'?>
 <overlay id='tonequillaFilterEditorOverlay'>
+<!--
+  <script src="chrome://tonequilla/content/customElements.js"/>
+  -->
 </overlay>

@@ -31,7 +31,7 @@
 -->
 <overlay id="tonequillaMessengerOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script src="messengerOverlay.js"/>
+  <script src="chrome://tonequilla/content/messengerOverlay.js"/>
   <stringbundleset id="stringbundleset">
     <stringbundle id="tonequillaStrings" src="chrome://tonequilla/locale/tonequilla.properties"/>
   </stringbundleset>
